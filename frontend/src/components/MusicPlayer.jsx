@@ -6,10 +6,12 @@ const MusicPlayer = ({ song, onNext }) => {
     const [expanded, setExpanded] = useState(false);
     const [fullscreen, setFullscreen] = useState(false);
 
-    // ✅ Auto collapse when song changes
+    // ✅ Auto open expanded mode to show video when song changes
     useEffect(() => {
-        setExpanded(false);
-        setFullscreen(false);
+        if (song) {
+            setExpanded(true);
+            setFullscreen(false);
+        }
     }, [song]);
 
     if (!song) return null;
@@ -109,18 +111,6 @@ const MusicPlayer = ({ song, onNext }) => {
 
                         {/* Song Info */}
                         <div className="flex flex-col items-center text-center mb-6">
-                            {song.image && (
-                                <div className="relative w-40 h-40 mb-5 group">
-                                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full blur-xl opacity-40 group-hover:opacity-70 transition duration-700"></div>
-                                    <img
-                                        src={song.image}
-                                        alt={song.title}
-                                        className="relative w-full h-full rounded-full object-cover border-[6px] border-gray-900 shadow-[0_0_30px_rgba(0,0,0,0.8)] animate-[spin_8s_linear_infinite]"
-                                    />
-                                    {/* Record hole */}
-                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-black rounded-full border border-gray-800"></div>
-                                </div>
-                            )}
 
                             <h3 className="text-white font-extrabold text-2xl truncate w-full px-4">
                                 {song.title}
@@ -134,7 +124,7 @@ const MusicPlayer = ({ song, onNext }) => {
                         {song.youtube_video_id ? (
                             <iframe
                                 width="100%"
-                                height={fullscreen ? "70%" : "220"}
+                                height={fullscreen ? "80%" : "280"}
                                 src={`https://www.youtube.com/embed/${song.youtube_video_id}?autoplay=1&rel=0`}
                                 title="YouTube player"
                                 frameBorder="0"
