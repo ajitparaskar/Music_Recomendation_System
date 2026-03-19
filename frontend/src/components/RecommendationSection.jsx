@@ -41,15 +41,8 @@ const RecommendationSection = ({ matchedSong, recommendations, loading, onSelect
                                 <div className="absolute top-4 right-6 px-3 py-1 bg-purple-500/20 text-purple-300 text-xs font-bold rounded-full border border-purple-500/30">
                                     Best Match
                                 </div>
-                                {matchedSong.image && (
-                                    <img
-                                        src={matchedSong.image}
-                                        alt={matchedSong.title}
-                                        className="w-32 h-32 md:w-40 md:h-40 rounded-2xl object-cover shadow-[0_0_30px_rgba(0,0,0,0.5)] group-hover:scale-105 transition-transform duration-500"
-                                    />
-                                )}
-                                <div className="text-center md:text-left">
-                                    <h3 className="text-3xl font-bold text-white mb-2">
+                                <div className="text-center md:text-left w-full pl-2">
+                                    <h3 className="text-4xl font-black text-white mb-3">
                                         {matchedSong.title}
                                     </h3>
                                     <p className="text-lg text-gray-300 mb-4">
@@ -81,33 +74,18 @@ const RecommendationSection = ({ matchedSong, recommendations, loading, onSelect
                                 onClick={() => onSelectSong(song)}
                                 className="group bg-white/5 backdrop-blur-xl p-5 rounded-3xl border border-white/10 hover:border-purple-500/50 hover:bg-white/10 transition-all duration-300 cursor-pointer hover:-translate-y-2 hover:shadow-[0_10px_40px_rgba(168,85,247,0.2)]"
                             >
-                                <div className="relative overflow-hidden rounded-2xl mb-4">
-                                    {song.image ? (
-                                        <img
-                                            src={song.image}
-                                            alt={song.title}
-                                            className="w-full aspect-square object-cover transform group-hover:scale-110 transition-transform duration-700"
-                                        />
-                                    ) : (
-                                        <div className="w-full aspect-square bg-gray-800 flex items-center justify-center">
-                                            <span className="text-gray-500">No Image</span>
-                                        </div>
-                                    )}
-                                    {/* Play icon overlay */}
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                                        <div className="w-14 h-14 bg-purple-500 rounded-full flex items-center justify-center transform scale-50 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(168,85,247,0.8)]">
-                                            <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                                        </div>
+                                <div className="flex justify-between items-start mb-4">
+                                    <h3 className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors leading-tight max-w-[85%] overflow-hidden text-ellipsis display-webkit-box webkit-line-clamp-2 webkit-box-orient-vertical">
+                                        {song.title}
+                                    </h3>
+                                    <div className="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center shrink-0 group-hover:bg-purple-500 group-hover:shadow-[0_0_15px_rgba(168,85,247,0.6)] transition-all duration-300">
+                                        <svg className="w-4 h-4 text-purple-200 group-hover:text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
                                     </div>
                                 </div>
-
-                                <h3 className="text-lg font-bold text-white truncate group-hover:text-purple-300 transition-colors">
-                                    {song.title}
-                                </h3>
                                 <p className="text-sm text-gray-400 truncate mb-1">
                                     {song.artist}
                                 </p>
-                                <p className="text-xs text-gray-500 truncate mb-4">
+                                <p className="text-xs text-gray-500 truncate mb-6 pb-4 border-b border-white/5">
                                     {song.album}
                                 </p>
 

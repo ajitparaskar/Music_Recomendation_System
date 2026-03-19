@@ -39,16 +39,7 @@ const MusicPlayer = ({ song, onNext }) => {
                         {/* Gradient Glow */}
                         <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-r from-purple-500/20 to-blue-500/20 blur-xl -z-10 group-hover:opacity-100 opacity-60 transition duration-500"></div>
 
-                        {song.image && (
-                            <div className="relative w-14 h-14 shrink-0">
-                                <img
-                                    src={song.image}
-                                    alt={song.title}
-                                    className="w-full h-full rounded-full object-cover border-2 border-gray-800 animate-[spin_8s_linear_infinite]"
-                                />
-                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-black rounded-full"></div>
-                            </div>
-                        )}
+
 
                         <div className="flex-1 min-w-0">
                             <h4 className="text-white font-bold text-sm truncate">
