@@ -104,27 +104,38 @@ def get_recommendations():
 
     result = recommend(song)
 
-    # 🔥 Add YouTube video for each recommendation (if enabled)
-    if "recommendations" in result and YOUTUBE_API_ENABLED:
-        print(f"🎵 Processing {len(result['recommendations'])} recommendations for YouTube videos...")
-        for i, rec in enumerate(result["recommendations"]):
-            song_title = rec.get("title", "Unknown")
-            artist = rec.get("artist", "Unknown")
-            print(f"  {i+1}. Searching YouTube for: '{song_title}' by '{artist}'")
+    # 🔥 Add YouTube video for matched_song and recommendations (if enabled)
+    if YOUTUBE_API_ENABLED:
+        if result.get("matched_song"):
+            ms = result["matched_song"]
+            song_title = ms.get("title", "Unknown")
+            artist = ms.get("artist", "Unknown")
+            print(f"🎵 Searching YouTube for Matched Song: '{song_title}' by '{artist}'")
+            ms["youtube_video_id"] = get_youtube_video(song_title, artist)
 
-            video_id = get_youtube_video(song_title, artist)
-            rec["youtube_video_id"] = video_id
+        if "recommendations" in result:
+            print(f"🎵 Processing {len(result['recommendations'])} recommendations for YouTube videos...")
+            for i, rec in enumerate(result["recommendations"]):
+                song_title = rec.get("title", "Unknown")
+                artist = rec.get("artist", "Unknown")
+                print(f"  {i+1}. Searching YouTube for: '{song_title}' by '{artist}'")
 
-            if video_id:
-                print(f"     ✅ Added video ID: {video_id}")
-            else:
-                print(f"     ❌ No video found")
+                video_id = get_youtube_video(song_title, artist)
+                rec["youtube_video_id"] = video_id
 
-        print(f"📋 YouTube processing complete. Videos found: {sum(1 for r in result['recommendations'] if r.get('youtube_video_id'))}/{len(result['recommendations'])}")
-    elif "recommendations" in result and not YOUTUBE_API_ENABLED:
+                if video_id:
+                    print(f"     ✅ Added video ID: {video_id}")
+                else:
+                    print(f"     ❌ No video found")
+
+            print(f"📋 YouTube processing complete.")
+    else:
         print("🎵 YouTube API disabled - skipping video search")
-        for rec in result["recommendations"]:
-            rec["youtube_video_id"] = None
+        if result.get("matched_song"):
+            result["matched_song"]["youtube_video_id"] = None
+        if "recommendations" in result:
+            for rec in result["recommendations"]:
+                rec["youtube_video_id"] = None
 
     return jsonify(result)
 
