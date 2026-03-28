@@ -1,5 +1,7 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useContext, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Star } from 'lucide-react';
+import { AuthContext } from '../context/AuthContext';
 
 const formatDuration = (ms) => {
     const minutes = Math.floor(ms / 60000);
@@ -8,6 +10,39 @@ const formatDuration = (ms) => {
 };
 
 const RecommendationSection = ({ matchedSong, recommendations, loading, onSelectSong }) => {
+    const { token } = useContext(AuthContext);
+    const [toastMessage, setToastMessage] = useState('');
+
+    const handleFavorite = async (e, song) => {
+        e.stopPropagation(); // prevent triggering select song 
+        if (!token) {
+            setToastMessage('Please login to save favorites.');
+            setTimeout(() => setToastMessage(''), 3000);
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:5000/api/favorites', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    song_title: song.title,
+                    artist: song.artist,
+                    youtube_video_id: song.youtube_video_id || null
+                })
+            });
+            const data = await response.json();
+            setToastMessage(data.message);
+            setTimeout(() => setToastMessage(''), 3000);
+        } catch (error) {
+            setToastMessage('Error saving favorite');
+            setTimeout(() => setToastMessage(''), 3000);
+        }
+    };
+
     return (
         <section className="py-20 px-6 max-w-7xl mx-auto relative z-10">
             <div className="flex items-center gap-3 mb-10">
@@ -16,6 +51,19 @@ const RecommendationSection = ({ matchedSong, recommendations, loading, onSelect
                     AI Recommendations
                 </h2>
             </div>
+            
+            <AnimatePresence>
+                {toastMessage && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-white/10 backdrop-blur-md border border-white/20 px-6 py-3 rounded-xl text-white shadow-xl"
+                    >
+                        {toastMessage}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {loading ? (
                 <div className="flex flex-col items-center justify-center py-20">
@@ -48,13 +96,19 @@ const RecommendationSection = ({ matchedSong, recommendations, loading, onSelect
                                     <p className="text-lg text-gray-300 mb-4">
                                         {matchedSong.artist} <span className="text-gray-600">•</span> {matchedSong.album}
                                     </p>
-                                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm">
+                                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm mt-4">
                                         <span className="bg-white/10 px-3 py-1.5 rounded-lg text-gray-300">
                                             🔥 Pop: {matchedSong.popularity}
                                         </span>
                                         <span className="bg-white/10 px-3 py-1.5 rounded-lg text-gray-300">
                                             ⏱ {formatDuration(matchedSong.duration_ms)}
                                         </span>
+                                        <button 
+                                            onClick={(e) => handleFavorite(e, matchedSong)}
+                                            className="ml-auto bg-primary/20 hover:bg-primary/40 text-primary px-4 py-2 rounded-xl flex items-center gap-2 transition-colors border border-primary/30"
+                                        >
+                                            <Star className="w-4 h-4" /> Save
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -93,12 +147,21 @@ const RecommendationSection = ({ matchedSong, recommendations, loading, onSelect
                                     <span className="text-xs font-medium text-gray-400 bg-white/5 px-2 py-1 rounded-md">
                                         Pop: {song.popularity}
                                     </span>
-                                    {song.preview_url && (
-                                        <span className="flex items-center gap-1 text-xs text-green-400 font-medium">
-                                            <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
-                                            Preview
-                                        </span>
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                        {song.preview_url && (
+                                            <span className="flex items-center gap-1 text-xs text-green-400 font-medium">
+                                                <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
+                                                Preview
+                                            </span>
+                                        )}
+                                        <button 
+                                            onClick={(e) => handleFavorite(e, song)}
+                                            className="text-gray-400 hover:text-primary transition-colors p-1"
+                                            title="Add to Favorites"
+                                        >
+                                            <Star className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </div>
                             </motion.div>
                         ))}

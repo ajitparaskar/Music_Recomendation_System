@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Music, Search, User, Menu, X } from 'lucide-react';
+import React, { useState, useEffect, useContext } from 'react';
+import { Music, Search, User, Menu, X, LogOut, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 
 const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const location = useLocation();
+    const navigate = useNavigate();
+    const { user, logout } = useContext(AuthContext);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -23,6 +26,10 @@ const Navbar = () => {
         { name: 'Contact', href: '/contact' },
         { name: 'About', href: '/about' },
     ];
+    
+    if (user) {
+        navLinks.push({ name: 'Favorites', href: '/favorites' });
+    }
 
     const isActive = (path) => {
         if (path === '/') return location.pathname === '/';
@@ -65,12 +72,27 @@ const Navbar = () => {
                     <button className="p-2 rounded-full hover:bg-white/10 transition-colors duration-300 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
                         <Search className="w-5 h-5 text-gray-300" />
                     </button>
-                    <Link to="/about">
-                        <button className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 flex items-center justify-center hover:border-primary/50 transition-all duration-300 hover:shadow-[0_0_15px_rgba(168,85,247,0.4)] relative group">
-                            <User className="w-5 h-5 text-gray-300 group-hover:text-white transition-colors" />
-                            <div className="absolute inset-0 rounded-full ring-1 ring-white/10 group-hover:ring-primary/50 transition-all duration-500" />
-                        </button>
-                    </Link>
+                    {user ? (
+                        <div className="flex items-center gap-4">
+                            <span className="text-primary font-semibold">Hello, {user.username}</span>
+                            <button 
+                                onClick={() => { logout(); navigate('/'); }}
+                                className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center hover:bg-red-500/20 transition-all duration-300 text-red-500 group"
+                                title="Logout"
+                            >
+                                <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-3">
+                            <Link to="/login" className="text-gray-300 hover:text-white font-medium transition-colors">
+                                Login
+                            </Link>
+                            <Link to="/register" className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-full font-medium transition-colors shadow-[0_0_15px_rgba(168,85,247,0.4)]">
+                                Sign Up
+                            </Link>
+                        </div>
+                    )}
                 </div>
 
                 {/* Mobile Menu Button */}
@@ -103,11 +125,26 @@ const Navbar = () => {
                                 </Link>
                             ))}
                             <div className="h-px bg-white/10 my-2" />
-                            <Link to="/about" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-4">
-                                <button className="flex items-center gap-2 text-gray-300 hover:text-white">
-                                    <User size={20} /> Profile
-                                </button>
-                            </Link>
+                            {user ? (
+                                <>
+                                    <div className="text-primary font-medium px-2 py-1">Logged in as {user.username}</div>
+                                    <button 
+                                        onClick={() => { setIsMobileMenuOpen(false); logout(); navigate('/'); }} 
+                                        className="flex items-center gap-2 text-red-400 hover:text-red-300 font-medium"
+                                    >
+                                        <LogOut size={20} /> Logout
+                                    </button>
+                                </>
+                            ) : (
+                                <div className="flex flex-col gap-3 mt-2">
+                                    <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-300 hover:text-white font-medium text-lg">
+                                        Login
+                                    </Link>
+                                    <Link to="/register" onClick={() => setIsMobileMenuOpen(false)} className="bg-primary/20 text-primary px-4 py-2 rounded-xl font-medium text-center border border-primary/30">
+                                        Create Account
+                                    </Link>
+                                </div>
+                            )}
                         </div>
                     </motion.div>
                 )}

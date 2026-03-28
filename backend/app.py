@@ -4,6 +4,9 @@ from model import recommend, search_songs
 from dotenv import load_dotenv
 import os
 import requests
+from flask_jwt_extended import JWTManager
+from auth import auth_bp
+from db import db
 
 # ==============================
 # Load Environment Variables
@@ -12,6 +15,14 @@ load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
+
+# JWT Configuration
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'super-secret-music-key-2026')
+
+jwt = JWTManager(app)
+
+# Register Blueprints
+app.register_blueprint(auth_bp, url_prefix='/api')
 
 # YouTube API enabled/disabled flag
 YOUTUBE_API_ENABLED = os.getenv("YOUTUBE_API_ENABLED", "true").lower() == "true"
