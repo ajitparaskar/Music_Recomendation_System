@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
-import { AuthContext } from '../../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext.js';
 import { Trash2, Music, Play } from 'lucide-react';
 import MusicPlayer from './MusicPlayer';
 import { backendUrl } from '../../config';

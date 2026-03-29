@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star } from 'lucide-react';
-import { AuthContext } from '../../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext.js';
 import { backendUrl } from '../../config';
 
 const formatDuration = (ms) => {
@@ -38,7 +38,7 @@ const RecommendationSection = ({ matchedSong, recommendations, loading, onSelect
             const data = await response.json();
             setToastMessage(data.message);
             setTimeout(() => setToastMessage(''), 3000);
-        } catch (error) {
+        } catch (_error) {
             setToastMessage('Error saving favorite');
             setTimeout(() => setToastMessage(''), 3000);
         }

@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Music2, ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext.js';
 import { backendUrl } from '../../config';
 
 export default function Login() {
@@ -35,7 +35,7 @@ export default function Login() {
       } else {
         setError(data.message || 'Login failed');
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An error occurred. Please try again.');
     } finally {
       setLoading(false);

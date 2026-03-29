@@ -9,7 +9,7 @@ import Contact from './components/pages/Contact';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Favorites from './components/music/Favorites';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext.jsx';
 
 function App() {
   const location = useLocation();
