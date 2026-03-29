@@ -1,14 +1,14 @@
 import React from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import Navbar from './components/Navbar';
-import Home from './components/Home';
-import About from './components/About';
-import Features from './components/Features';
-import Contact from './components/Contact';
-import Login from './components/Login';
-import Register from './components/Register';
-import Favorites from './components/Favorites';
+import Navbar from './components/layout/Navbar';
+import Home from './components/music/Home';
+import About from './components/pages/About';
+import Features from './components/pages/Features';
+import Contact from './components/pages/Contact';
+import Login from './components/auth/Login';
+import Register from './components/auth/Register';
+import Favorites from './components/music/Favorites';
 import { AuthProvider } from './context/AuthContext';
 
 function App() {

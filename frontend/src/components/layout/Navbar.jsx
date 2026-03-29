@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Music, Search, User, Menu, X, LogOut, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext';
 
 const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false);

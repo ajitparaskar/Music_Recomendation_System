@@ -1,8 +1,8 @@
 import React, { useContext, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star } from 'lucide-react';
-import { AuthContext } from '../context/AuthContext';
-import { backendUrl } from '../config';
+import { AuthContext } from '../../context/AuthContext';
+import { backendUrl } from '../../config';
 
 const formatDuration = (ms) => {
     const minutes = Math.floor(ms / 60000);

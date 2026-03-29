@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { backendUrl } from '../config';
+import { backendUrl } from '../../config';
 
 const Hero = ({ onSearch }) => {
     const [song, setSong] = useState("");

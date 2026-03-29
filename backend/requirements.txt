@@ -24,6 +24,7 @@ threadpoolctl==3.6.0
 tzdata==2025.3
 urllib3==2.6.3
 Werkzeug==3.1.5
-Flask-JWT-Extended
-pymongo
-dnspython
+Flask-JWT-Extended==4.7.1
+pymongo==4.15.5
+dnspython==2.8.0
+pytest==8.4.2

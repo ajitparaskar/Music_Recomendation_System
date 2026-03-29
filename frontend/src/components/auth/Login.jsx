@@ -2,8 +2,8 @@ import React, { useState, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Music2, ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
-import { backendUrl } from '../config';
+import { AuthContext } from '../../context/AuthContext';
+import { backendUrl } from '../../config';
 
 export default function Login() {
   const [username, setUsername] = useState('');

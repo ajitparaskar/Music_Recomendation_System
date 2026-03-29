@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext';
 import { Trash2, Music, Play } from 'lucide-react';
 import MusicPlayer from './MusicPlayer';
-import { backendUrl } from '../config';
+import { backendUrl } from '../../config';
 
 export default function Favorites() {
   const { token, user } = useContext(AuthContext);

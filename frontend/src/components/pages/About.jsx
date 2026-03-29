@@ -3,12 +3,12 @@ import { motion } from 'framer-motion';
 import { Github, Linkedin, Mail, Cpu, Globe, Users } from 'lucide-react';
 
 // 🔥 Main Profile Image
-import profileImage from '../assets/ajit.png';
+import profileImage from '../../assets/ajit.png';
 
 // 🔥 Team Images (IMPORTANT — must import)
-import shrutiImg from '../assets/shruti.png';
-import sujataImg from '../assets/sujata.png';
-import bhagyashreeImg from '../assets/swami.png';
+import shrutiImg from '../../assets/shruti.png';
+import sujataImg from '../../assets/sujata.png';
+import bhagyashreeImg from '../../assets/swami.png';
 
 const About = () => {
 

@@ -1,89 +1,94 @@
-# 🎵 AI Music Recommender
+# Music Recommendation System
 
-A modern, AI-powered music recommendation platform built using React, Tailwind CSS, Framer Motion, and Machine Learning principles.
+Production-style monorepo: **React + Vite** frontend, **Flask** API with an app factory, **MongoDB** for users/favorites, and a **content-based recommender** (TF-IDF + cosine similarity) over a CSV catalog.
 
-This project demonstrates how intelligent recommendation systems can be combined with a premium frontend experience to simulate real-world music streaming platforms like Spotify.
+## Repository structure
 
----
+| Path | Role |
+|------|------|
+| `backend/` | Flask API (`app` package), Gunicorn `wsgi:app`, tests |
+| `frontend/` | React SPA, env-driven API base URL |
+| `docs/` | Architecture notes |
+| `docker-compose.yml` | MongoDB + API for local integration |
 
-## 🚀 Live Demo
+## Prerequisites
 
-🌐 Live Website: https://YOUR-VERCEL-LINK.vercel.app  
-📂 GitHub Repository: https://github.com/YOUR_USERNAME/ai-music-recommender  
+- Python 3.12+ (backend)
+- Node 20+ (frontend)
+- MongoDB (local, Docker, or Atlas)
+- `dataset.csv` in `backend/` (Spotify tracks dataset used by the engine)
 
----
-
-## 📌 Project Overview
-
-AI Music Recommender is a web-based music streaming interface that allows users to:
-
-- 🔍 Search for a Hindi song
-- 🤖 Get AI-based similar song recommendations
-- ▶️ Play songs directly on the platform
-- ✨ Experience smooth animations and modern UI
-
-The system is designed to simulate how real music streaming platforms use recommendation algorithms to enhance user experience.
-
----
-
-## 🧠 Machine Learning Approach
-
-This project implements a **Content-Based Recommendation System** using:
-
-- TF-IDF Vectorization
-- Cosine Similarity
-- Feature Engineering (Artist + Genre)
-
-### 🔄 How It Works:
-
-1. User enters a song name.
-2. The system processes song metadata.
-3. Text data is converted into numerical vectors using TF-IDF.
-4. Cosine similarity calculates similarity scores.
-5. Top similar songs are returned as recommendations.
-
----
-
-## 💻 Tech Stack
-
-### 🎨 Frontend
-- React (Vite)
-- Tailwind CSS
-- Framer Motion
-- Lucide Icons
-
-### 🧠 Backend (ML Integration)
-- Flask
-- Pandas
-- Scikit-learn
-- Cosine Similarity Model
-
----
-
-## 🎨 UI Highlights
-
-- 🌑 Dark Luxury Theme
-- ⚡ Neon Gradient Effects
-- 💎 Glassmorphism Design
-- 🎬 Smooth Page Transitions
-- 🎵 Spotify-style Sticky Music Player
-- 📱 Fully Responsive Layout
-
----
-
-## 👨‍💻 Developer
-
-**Ajit Paraskar**  
-Computer Engineering Student  
-Specialization: Machine Learning & Full Stack Development  
-
-> “I am passionate about building intelligent AI-powered web applications that combine beautiful user interfaces with real-world machine learning systems.”
-
----
-
-## 📂 Installation & Setup
-
-Clone the repository:
+## Backend setup
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ai-music-recommender.git
+cd backend
+python -m venv .venv
+.venv\Scripts\activate          # Windows
+# source .venv/bin/activate     # macOS/Linux
+pip install -r requirements.txt
+copy .env.example .env          # edit secrets and Mongo URI
+python run.py                   # http://localhost:5000
+```
+
+**Production-style serve (Gunicorn):**
+
+```bash
+set FLASK_ENV=production
+set JWT_SECRET_KEY=your-long-random-secret
+gunicorn --bind 0.0.0.0:5000 --workers 2 --threads 4 --timeout 120 wsgi:app
+```
+
+**Health check:** `GET http://localhost:5000/health`
+
+**Tests:**
+
+```bash
+cd backend
+pip install pytest
+pytest tests/ -q
+```
+
+## Frontend setup
+
+```bash
+cd frontend
+npm install
+copy .env.example .env          # set VITE_BACKEND_URL to your API
+npm run dev
+```
+
+**Production build:** `npm run build` → static assets in `frontend/dist/` (serve behind nginx, Netlify, Vercel, etc.).
+
+## Docker
+
+**API + MongoDB:**
+
+```bash
+docker compose up --build
+```
+
+Point the frontend at `http://localhost:5000` (or the host/port you publish). For the **frontend image**, pass the API URL at build time:
+
+```bash
+docker build -f frontend/Dockerfile --build-arg VITE_BACKEND_URL=https://api.example.com ./frontend
+```
+
+## Environment variables
+
+- **Backend** — see `backend/.env.example` (`JWT_SECRET_KEY`, `MONGO_URI`, `CORS_ORIGINS`, `DATASET_PATH`, optional Spotify/YouTube keys).
+- **Frontend** — `VITE_BACKEND_URL` only (public).
+
+## API surface (summary)
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/health` | No |
+| POST | `/recommend` | No |
+| POST | `/search` | No |
+| POST | `/api/register` | No |
+| POST | `/api/login` | No |
+| GET/POST/DELETE | `/api/favorites` | JWT |
+
+## License / attribution
+
+Project structure and deployment patterns are suitable for portfolios and internships; replace placeholder links in marketing pages with your own deployment URLs.

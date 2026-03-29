@@ -1,0 +1,28 @@
+# Local full stack: MongoDB + API. Frontend: run `npm run dev` in ./frontend or build image.
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      FLASK_ENV: development
+      MONGO_URI: mongodb://mongo:27017/
+      MONGO_DB_NAME: music_db
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-only-change-in-prod}
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000
+    depends_on:
+      - mongo
+
+volumes:
+  mongo_data:
