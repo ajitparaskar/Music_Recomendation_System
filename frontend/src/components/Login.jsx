@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Mail, Lock, Music2, ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { backendUrl } from '../config';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -18,7 +19,7 @@ export default function Login() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/login', {
+      const response = await fetch(`${backendUrl}/api/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

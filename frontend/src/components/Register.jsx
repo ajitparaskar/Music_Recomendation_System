@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, Lock, Music2, ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { backendUrl } from '../config';
 
 export default function Register() {
   const [username, setUsername] = useState('');
@@ -22,7 +23,7 @@ export default function Register() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/register', {
+      const response = await fetch(`${backendUrl}/api/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

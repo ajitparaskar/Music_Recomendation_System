@@ -2,6 +2,7 @@ import React, { useContext, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
+import { backendUrl } from '../config';
 
 const formatDuration = (ms) => {
     const minutes = Math.floor(ms / 60000);
@@ -22,7 +23,7 @@ const RecommendationSection = ({ matchedSong, recommendations, loading, onSelect
         }
 
         try {
-            const response = await fetch('http://localhost:5000/api/favorites', {
+            const response = await fetch(`${backendUrl}/api/favorites`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

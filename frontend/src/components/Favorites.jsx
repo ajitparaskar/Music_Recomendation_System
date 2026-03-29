@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { AuthContext } from '../context/AuthContext';
 import { Trash2, Music, Play } from 'lucide-react';
 import MusicPlayer from './MusicPlayer';
+import { backendUrl } from '../config';
 
 export default function Favorites() {
   const { token, user } = useContext(AuthContext);
@@ -17,7 +18,7 @@ export default function Favorites() {
   const fetchFavorites = async () => {
     if (!token) return;
     try {
-      const response = await fetch('http://localhost:5000/api/favorites', {
+      const response = await fetch(`${backendUrl}/api/favorites`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -36,7 +37,7 @@ export default function Favorites() {
   const removeFavorite = async (e, id) => {
     e.stopPropagation();
     try {
-      const response = await fetch(`http://localhost:5000/api/favorites/${id}`, {
+      const response = await fetch(`${backendUrl}/api/favorites/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

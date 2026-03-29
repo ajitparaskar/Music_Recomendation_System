@@ -3,8 +3,7 @@ import Hero from './Hero';
 import RecommendationSection from './RecommendationSection';
 import MusicPlayer from './MusicPlayer';
 import { motion } from 'framer-motion';
-
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
+import { backendUrl } from '../config';
 
 const Home = () => {
     const [matchedSong, setMatchedSong] = useState(null);
