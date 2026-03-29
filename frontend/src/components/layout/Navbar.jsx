@@ -69,7 +69,19 @@ const Navbar = () => {
 
                 {/* Profile / Actions */}
                 <div className="hidden md:flex items-center gap-4">
-                    <button className="p-2 rounded-full hover:bg-white/10 transition-colors duration-300 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            navigate('/');
+                            window.requestAnimationFrame(() => {
+                                document.getElementById('hero-search')?.focus({ preventScroll: false });
+                                document.getElementById('hero-search')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            });
+                        }}
+                        className="p-2 rounded-full hover:bg-white/10 transition-colors duration-300 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+                        title="Search songs"
+                        aria-label="Search songs"
+                    >
                         <Search className="w-5 h-5 text-gray-300" />
                     </button>
                     {user ? (

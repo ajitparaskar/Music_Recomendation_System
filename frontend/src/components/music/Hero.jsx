@@ -13,16 +13,25 @@ const Hero = ({ onSearch }) => {
             return;
         }
 
-        const response = await fetch(backendUrl + "/search", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ query: value }),
-        });
+        try {
+            const response = await fetch(backendUrl + "/search", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ query: value }),
+            });
 
-        const data = await response.json();
-        setSuggestions(data.suggestions);
+            if (!response.ok) {
+                setSuggestions([]);
+                return;
+            }
+
+            const data = await response.json();
+            setSuggestions(Array.isArray(data.suggestions) ? data.suggestions : []);
+        } catch {
+            setSuggestions([]);
+        }
     };
 
     const handleChange = (e) => {
@@ -85,6 +94,7 @@ const Hero = ({ onSearch }) => {
                     <div className="relative group">
                         <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-focus-within:opacity-75"></div>
                         <input
+                            id="hero-search"
                             type="text"
                             value={song}
                             onChange={handleChange}
