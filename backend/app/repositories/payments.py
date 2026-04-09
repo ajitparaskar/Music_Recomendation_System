@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 
@@ -18,7 +18,7 @@ class PaymentRepository:
         plan: str,
         amount: int,
     ) -> Any:
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         return self._collection.insert_one(
             {
                 "user_id": user_id,
@@ -45,7 +45,7 @@ class PaymentRepository:
                     "payment_id": payment_id,
                     "signature": signature,
                     "status": "paid",
-                    "updated_at": datetime.now(UTC),
+                    "updated_at": datetime.now(timezone.utc),
                 }
             },
         )
@@ -58,7 +58,7 @@ class PaymentRepository:
                 "$set": {
                     "status": "failed",
                     "failure_reason": reason,
-                    "updated_at": datetime.now(UTC),
+                    "updated_at": datetime.now(timezone.utc),
                 }
             },
         )

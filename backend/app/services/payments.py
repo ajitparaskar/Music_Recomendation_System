@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hmac
 import logging
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from hashlib import sha256
 from typing import Any
 
@@ -45,7 +45,7 @@ class PaymentService:
             return {"message": "Invalid subscription plan"}, 400
 
         if not self._client or not self._key_id or not self._key_secret:
-            dummy_order = f"order_dummy_{int(datetime.now(UTC).timestamp())}"
+            dummy_order = f"order_dummy_{int(datetime.now(timezone.utc).timestamp())}"
             self._payments.create_pending(
                 user_id=user_id,
                 order_id=dummy_order,
@@ -138,9 +138,9 @@ class PaymentService:
         days = self._monthly_days if payment["plan"] == "monthly" else self._yearly_days
         user = self._users.find_by_id(user_id)
         current_expiry = user.get("subscription_expiry") if user else None
-        base_date = datetime.now(UTC)
+        base_date = datetime.now(timezone.utc)
         if current_expiry and isinstance(current_expiry, datetime) and current_expiry.tzinfo is None:
-            current_expiry = current_expiry.replace(tzinfo=UTC)
+            current_expiry = current_expiry.replace(tzinfo=timezone.utc)
         if current_expiry and current_expiry > base_date:
             base_date = current_expiry
 
@@ -164,7 +164,7 @@ class PaymentService:
                     "username": refreshed["username"],
                     "is_premium": bool(refreshed.get("is_premium")),
                     "subscription_expiry": (
-                        refreshed.get("subscription_expiry").astimezone(UTC).isoformat()
+                        refreshed.get("subscription_expiry").astimezone(timezone.utc).isoformat()
                         if refreshed.get("subscription_expiry")
                         else None
                     ),

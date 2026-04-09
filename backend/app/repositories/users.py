@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from bson.objectid import ObjectId
@@ -25,7 +25,7 @@ class UserRepository:
                 "password_hash": password_hash,
                 "is_premium": False,
                 "subscription_expiry": None,
-                "created_at": datetime.now(UTC),
+                "created_at": datetime.now(timezone.utc),
             }
         )
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from bson.errors import InvalidId
@@ -85,15 +85,15 @@ class AuthService:
 
         expiry = user.get("subscription_expiry")
         if expiry and isinstance(expiry, datetime) and expiry.tzinfo is None:
-            expiry = expiry.replace(tzinfo=UTC)
+            expiry = expiry.replace(tzinfo=timezone.utc)
 
         is_premium = bool(user.get("is_premium"))
-        if expiry and expiry < datetime.now(UTC):
+        if expiry and expiry < datetime.now(timezone.utc):
             is_premium = False
 
         return {
             "id": str(user["_id"]),
             "username": user["username"],
             "is_premium": is_premium,
-            "subscription_expiry": expiry.astimezone(UTC).isoformat() if expiry else None,
+            "subscription_expiry": expiry.astimezone(timezone.utc).isoformat() if expiry else None,
         }

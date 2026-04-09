@@ -1,9 +1,6 @@
-# Render Blueprint: API lives under backend/; WSGI entry is wsgi.py (not the app package).
-# Use `wsgi:app` — `app:app` loads the `app` package, which has no `app` attribute.
 services:
   - type: web
-    name: music-recommendation-api
-    runtime: python
-    rootDir: backend
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 wsgi:app
+    name: music-backend
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn run:app"

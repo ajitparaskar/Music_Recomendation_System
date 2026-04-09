@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 
@@ -28,7 +28,7 @@ class PersonalizationService:
         artist: str,
         song_metadata: dict[str, Any] | None = None,
     ) -> tuple[dict[str, Any], int]:
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         document = {
             "user_id": user_id,
             "song_title": song_title,
@@ -42,7 +42,7 @@ class PersonalizationService:
         if latest and self._is_same_history_track(latest, document):
             latest_played_at = latest.get("played_at")
             if latest_played_at and latest_played_at.tzinfo is None:
-                latest_played_at = latest_played_at.replace(tzinfo=UTC)
+                latest_played_at = latest_played_at.replace(tzinfo=timezone.utc)
             if latest_played_at and (now - latest_played_at).total_seconds() <= _HISTORY_DEDUP_WINDOW_SECONDS:
                 self._history.update_entry(
                     latest["_id"],
@@ -80,7 +80,7 @@ class PersonalizationService:
         document = {
             "user_id": user_id,
             "name": name,
-            "created_at": datetime.now(UTC),
+            "created_at": datetime.now(timezone.utc),
             "songs": [],
         }
         result = self._playlists.create(document)
@@ -132,7 +132,7 @@ class PersonalizationService:
             "image": song_data.get("image"),
             "preview_url": song_data.get("preview_url"),
             "spotify_url": song_data.get("spotify_url"),
-            "added_at": datetime.now(UTC).isoformat(),
+            "added_at": datetime.now(timezone.utc).isoformat(),
         }
         self._playlists.add_song(playlist_id, user_id, song)
         return {"message": "Song added to playlist", "song": song}, 201
@@ -158,7 +158,7 @@ class PersonalizationService:
         if not user:
             return False
         expiry = user.get("subscription_expiry")
-        if expiry and expiry < datetime.now(UTC):
+        if expiry and expiry < datetime.now(timezone.utc):
             return False
         return bool(user.get("is_premium"))
 

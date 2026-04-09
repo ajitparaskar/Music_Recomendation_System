@@ -1,6 +1,6 @@
 """Recommendation and search endpoints."""
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from flask import Blueprint, current_app, jsonify, request
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
@@ -29,8 +29,8 @@ def _current_user_is_premium() -> bool:
 
     expiry = user.get("subscription_expiry")
     if expiry and expiry.tzinfo is None:
-        expiry = expiry.replace(tzinfo=UTC)
-    if expiry and expiry < datetime.now(UTC):
+        expiry = expiry.replace(tzinfo=timezone.utc)
+    if expiry and expiry < datetime.now(timezone.utc):
         return False
     return bool(user.get("is_premium"))
 
