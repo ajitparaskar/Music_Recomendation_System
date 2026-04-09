@@ -2,13 +2,13 @@
 
 import logging
 
-from bson.objectid import ObjectId
-from flask import Blueprint, jsonify, request
-from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
+from flask import Blueprint, current_app, jsonify, request
+from flask_jwt_extended import get_jwt_identity, jwt_required
 from pymongo.errors import PyMongoError
-from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.db import get_db
+from app.services.auth import AuthService
+from app.services.payments import PaymentService
 
 logger = logging.getLogger(__name__)
 
@@ -23,21 +23,15 @@ _DB_UNAVAILABLE = (
 @auth_bp.route("/register", methods=["POST"])
 def register():
     data = request.get_json(silent=True) or {}
-    username = data.get("username")
-    password = data.get("password")
+    username = (data.get("username") or "").strip()
+    password = data.get("password") or ""
 
     if not username or not password:
         return jsonify({"message": "Username and password are required"}), 400
 
     try:
-        db = get_db()
-        if db.users.find_one({"username": username}):
-            return jsonify({"message": "User already exists"}), 400
-
-        hashed_password = generate_password_hash(password)
-        db.users.insert_one({"username": username, "password_hash": hashed_password})
-
-        return jsonify({"message": "User registered successfully"}), 201
+        payload, status_code = AuthService(get_db()).register(username, password)
+        return jsonify(payload), status_code
     except PyMongoError:
         logger.exception("MongoDB error in register")
         return jsonify({"message": _DB_UNAVAILABLE}), 503
@@ -46,24 +40,73 @@ def register():
 @auth_bp.route("/login", methods=["POST"])
 def login():
     data = request.get_json(silent=True) or {}
-    username = data.get("username")
-    password = data.get("password")
+    username = (data.get("username") or "").strip()
+    password = data.get("password") or ""
 
     if not username or not password:
         return jsonify({"message": "Username and password are required"}), 400
 
     try:
-        db = get_db()
-        user = db.users.find_one({"username": username})
+        payload, status_code = AuthService(get_db()).login(username, password)
+        return jsonify(payload), status_code
     except PyMongoError:
         logger.exception("MongoDB error in login")
         return jsonify({"message": _DB_UNAVAILABLE}), 503
 
-    if not user or not check_password_hash(user["password_hash"], password):
-        return jsonify({"message": "Invalid username or password"}), 401
 
-    access_token = create_access_token(identity=str(user["_id"]))
-    return jsonify({"access_token": access_token, "username": user["username"]}), 200
+@auth_bp.route("/me", methods=["GET"])
+@jwt_required()
+def get_me():
+    current_user_id = get_jwt_identity()
+    try:
+        payload, status_code = AuthService(get_db()).get_user_profile(current_user_id)
+        return jsonify(payload), status_code
+    except PyMongoError:
+        logger.exception("MongoDB error in get_me")
+        return jsonify({"message": _DB_UNAVAILABLE}), 503
+
+
+@auth_bp.route("/payments/create-order", methods=["POST"])
+@jwt_required()
+def create_payment_order():
+    current_user_id = get_jwt_identity()
+    data = request.get_json(silent=True) or {}
+    plan = data.get("plan", "monthly")
+
+    try:
+        payload, status_code = PaymentService(get_db(), current_app.config).create_order(
+            current_user_id,
+            plan,
+        )
+        return jsonify(payload), status_code
+    except PyMongoError:
+        logger.exception("MongoDB error in create_payment_order")
+        return jsonify({"message": _DB_UNAVAILABLE}), 503
+    except Exception:
+        logger.exception("Unexpected error in create_payment_order")
+        return jsonify({"message": "Unable to create payment order right now"}), 500
+
+
+@auth_bp.route("/payments/verify", methods=["POST"])
+@jwt_required()
+def verify_payment():
+    current_user_id = get_jwt_identity()
+    data = request.get_json(silent=True) or {}
+
+    try:
+        payload, status_code = PaymentService(get_db(), current_app.config).verify_payment(
+            current_user_id,
+            data.get("razorpay_order_id", ""),
+            data.get("razorpay_payment_id", ""),
+            data.get("razorpay_signature", ""),
+        )
+        return jsonify(payload), status_code
+    except PyMongoError:
+        logger.exception("MongoDB error in verify_payment")
+        return jsonify({"message": _DB_UNAVAILABLE}), 503
+    except Exception:
+        logger.exception("Unexpected error in verify_payment")
+        return jsonify({"message": "Unable to verify payment right now"}), 500
 
 
 @auth_bp.route("/favorites", methods=["POST"])
@@ -72,36 +115,21 @@ def add_favorite():
     current_user_id = get_jwt_identity()
     data = request.get_json(silent=True) or {}
 
-    song_title = data.get("song_title")
-    artist = data.get("artist")
+    song_title = (data.get("song_title") or "").strip()
+    artist = (data.get("artist") or "").strip()
     youtube_video_id = data.get("youtube_video_id")
 
     if not song_title or not artist:
         return jsonify({"message": "Song title and artist are required"}), 400
 
     try:
-        db = get_db()
-        existing = db.favorites.find_one(
-            {
-                "user_id": current_user_id,
-                "song_title": song_title,
-                "artist": artist,
-            }
+        payload, status_code = AuthService(get_db()).add_favorite(
+            current_user_id,
+            song_title,
+            artist,
+            youtube_video_id,
         )
-
-        if existing:
-            return jsonify({"message": "Song already in favorites"}), 400
-
-        db.favorites.insert_one(
-            {
-                "user_id": current_user_id,
-                "song_title": song_title,
-                "artist": artist,
-                "youtube_video_id": youtube_video_id,
-            }
-        )
-
-        return jsonify({"message": "Added to favorites successfully"}), 201
+        return jsonify(payload), status_code
     except PyMongoError:
         logger.exception("MongoDB error in add_favorite")
         return jsonify({"message": _DB_UNAVAILABLE}), 503
@@ -112,21 +140,8 @@ def add_favorite():
 def get_favorites():
     current_user_id = get_jwt_identity()
     try:
-        db = get_db()
-        favorites = db.favorites.find({"user_id": current_user_id})
-
-        result = []
-        for fav in favorites:
-            result.append(
-                {
-                    "id": str(fav["_id"]),
-                    "song_title": fav["song_title"],
-                    "artist": fav["artist"],
-                    "youtube_video_id": fav.get("youtube_video_id"),
-                }
-            )
-
-        return jsonify(result), 200
+        payload, status_code = AuthService(get_db()).get_favorites(current_user_id)
+        return jsonify(payload), status_code
     except PyMongoError:
         logger.exception("MongoDB error in get_favorites")
         return jsonify({"message": _DB_UNAVAILABLE}), 503
@@ -138,20 +153,11 @@ def remove_favorite(favorite_id):
     current_user_id = get_jwt_identity()
 
     try:
-        obj_id = ObjectId(favorite_id)
-    except Exception:
-        return jsonify({"message": "Invalid favorite ID format"}), 400
-
-    try:
-        db = get_db()
-        deleted = db.favorites.delete_one(
-            {"_id": obj_id, "user_id": current_user_id}
+        payload, status_code = AuthService(get_db()).remove_favorite(
+            favorite_id,
+            current_user_id,
         )
-
-        if deleted.deleted_count == 0:
-            return jsonify({"message": "Favorite not found or not yours"}), 404
-
-        return jsonify({"message": "Favorite removed successfully"}), 200
+        return jsonify(payload), status_code
     except PyMongoError:
         logger.exception("MongoDB error in remove_favorite")
         return jsonify({"message": _DB_UNAVAILABLE}), 503

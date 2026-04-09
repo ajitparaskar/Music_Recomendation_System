@@ -9,29 +9,40 @@ import Contact from './components/pages/Contact';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Favorites from './components/music/Favorites';
-import { AuthProvider } from './context/AuthContext.jsx';
+import { AuthProvider } from './context/AuthProvider.jsx';
+import { ThemeProvider } from './context/ThemeProvider.jsx';
+import { useTheme } from './context/useTheme.js';
 
-function App() {
+function AppShell() {
   const location = useLocation();
+  const { theme } = useTheme();
 
   return (
-    <AuthProvider>
-      <div className="min-h-screen bg-background text-white selection:bg-primary/30">
-        <Navbar />
+    <div className={`app-shell min-h-screen selection:bg-primary/30 ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+      <Navbar />
 
-        <AnimatePresence mode="wait">
-          <Routes location={location} key={location.pathname}>
-            <Route path="/" element={<Home />} />
-            <Route path="/features" element={<Features />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/favorites" element={<Favorites />} />
-          </Routes>
-        </AnimatePresence>
-      </div>
-    </AuthProvider>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<Home />} />
+          <Route path="/features" element={<Features />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/favorites" element={<Favorites />} />
+        </Routes>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <AppShell />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

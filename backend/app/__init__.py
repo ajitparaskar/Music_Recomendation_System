@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import sys
+from pathlib import Path
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify
@@ -14,9 +15,10 @@ from pymongo import MongoClient
 from app.blueprints.auth import auth_bp
 from app.blueprints.health import health_bp
 from app.blueprints.music import music_bp
-from app.config import config_by_name
+from app.blueprints.personalization import personalization_bp
 from app.errors import register_error_handlers
 from app.extensions import jwt
+from app.services.emotion import EmotionDetectionService
 from app.services.recommendation import RecommendationService
 from app.services.youtube import YoutubeService
 
@@ -36,7 +38,10 @@ def _configure_logging(app: Flask) -> None:
 
 
 def create_app(config_name: str | None = None) -> Flask:
-    load_dotenv()
+    # Load backend/.env regardless of current working directory (e.g. IDE runs from repo root).
+    _backend_root = Path(__file__).resolve().parent.parent
+    load_dotenv(_backend_root / ".env")
+    from app.config import config_by_name
 
     config_name = config_name or os.environ.get("FLASK_ENV", "development")
     ConfigClass = config_by_name.get(config_name, config_by_name["development"])
@@ -71,12 +76,16 @@ def create_app(config_name: str | None = None) -> Flask:
     recommendation_service = RecommendationService()
     recommendation_service.init_app(app)
 
+    emotion_service = EmotionDetectionService()
+    emotion_service.init_app(app)
+
     youtube_service = YoutubeService()
     youtube_service.init_app(app)
 
     app.register_blueprint(health_bp)
     app.register_blueprint(music_bp)
     app.register_blueprint(auth_bp, url_prefix="/api")
+    app.register_blueprint(personalization_bp, url_prefix="/api")
 
     register_error_handlers(app)
 

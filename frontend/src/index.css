@@ -3,12 +3,99 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --bg-base: #0f0f0f;
+    --bg-elevated: rgba(255, 255, 255, 0.08);
+    --bg-elevated-strong: rgba(0, 0, 0, 0.6);
+    --surface-border: rgba(255, 255, 255, 0.12);
+    --text-primary: #ffffff;
+    --text-muted: #9ca3af;
+    --shadow-soft: 0 24px 60px rgba(0, 0, 0, 0.32);
+  }
+
+  .theme-light {
+    --bg-base: #f5f7fb;
+    --bg-elevated: rgba(255, 255, 255, 0.85);
+    --bg-elevated-strong: rgba(255, 255, 255, 0.92);
+    --surface-border: rgba(148, 163, 184, 0.2);
+    --text-primary: #0f172a;
+    --text-muted: #64748b;
+    --shadow-soft: 0 24px 60px rgba(148, 163, 184, 0.22);
+  }
+
   html {
     scroll-behavior: smooth;
   }
 
   body {
-    @apply bg-background text-white antialiased;
+    background:
+      radial-gradient(circle at top left, rgba(168, 85, 247, 0.16), transparent 30%),
+      radial-gradient(circle at bottom right, rgba(6, 182, 212, 0.14), transparent 28%),
+      var(--bg-base);
+    color: var(--text-primary);
+    @apply antialiased transition-colors duration-300;
+  }
+}
+
+@layer components {
+  .app-shell {
+    background:
+      radial-gradient(circle at top left, rgba(168, 85, 247, 0.14), transparent 25%),
+      radial-gradient(circle at bottom right, rgba(6, 182, 212, 0.12), transparent 22%),
+      var(--bg-base);
+  }
+
+  .glass-surface {
+    background: var(--bg-elevated);
+    border: 1px solid var(--surface-border);
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(20px);
+  }
+
+  .glass-surface-strong {
+    background: var(--bg-elevated-strong);
+    border: 1px solid var(--surface-border);
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(24px);
+  }
+
+  .app-text {
+    color: var(--text-primary);
+  }
+
+  .app-muted {
+    color: var(--text-muted);
+  }
+
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.16) 50%,
+      rgba(255, 255, 255, 0.08) 100%
+    );
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.4s linear infinite;
+  }
+
+  .theme-light .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgba(148, 163, 184, 0.12) 0%,
+      rgba(255, 255, 255, 0.6) 50%,
+      rgba(148, 163, 184, 0.12) 100%
+    );
+  }
+}
+
+@keyframes skeletonShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }
 
@@ -18,14 +105,14 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #0f0f0f;
+  background: rgba(15, 23, 42, 0.15);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #333;
+  background: rgba(100, 116, 139, 0.55);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: rgba(71, 85, 105, 0.7);
 }

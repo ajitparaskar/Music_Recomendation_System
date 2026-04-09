@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, Lock, Music2, ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { backendUrl } from '../../config';
+import { apiRequest } from '../../api/client';
 
 export default function Register() {
   const [username, setUsername] = useState('');
@@ -23,7 +23,7 @@ export default function Register() {
     setError('');
 
     try {
-      const response = await fetch(`${backendUrl}/api/register`, {
+      await apiRequest('/api/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,15 +31,9 @@ export default function Register() {
         body: JSON.stringify({ username, password }),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        navigate('/login');
-      } else {
-        setError(data.message || 'Registration failed');
-      }
-    } catch (_err) {
-      setError('An error occurred. Please try again.');
+      navigate('/login');
+    } catch (error) {
+      setError(error.message || 'An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }

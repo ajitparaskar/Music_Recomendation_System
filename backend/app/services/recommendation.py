@@ -33,6 +33,7 @@ class RecommendationService:
         self._df = pd.read_csv(dataset_path)
         self._df.dropna(inplace=True)
         self._df["track_name_lower"] = self._df["track_name"].str.lower()
+        self._df["artists_lower"] = self._df["artists"].str.lower()
         self._df["tags"] = (
             self._df["artists"].astype(str)
             + " "
@@ -40,6 +41,7 @@ class RecommendationService:
             + " "
             + self._df["album_name"].astype(str)
         )
+        self._df["mood"] = self._df.apply(self._classify_mood, axis=1)
 
         self._vectorizer = TfidfVectorizer(stop_words="english")
         self._matrix = self._vectorizer.fit_transform(self._df["tags"])
@@ -130,19 +132,7 @@ class RecommendationService:
         matched_title = self._df.iloc[matched_index]["track_name"]
         matched_artist = self._df.iloc[matched_index]["artists"]
 
-        spotify_data = self._enrich_with_spotify(matched_title, matched_artist)
-
-        matched_song = {
-            "title": matched_title,
-            "artist": matched_artist,
-            "album": self._df.iloc[matched_index]["album_name"],
-            "popularity": int(self._df.iloc[matched_index]["popularity"]),
-            "duration_ms": int(self._df.iloc[matched_index]["duration_ms"]),
-            "track_id": self._df.iloc[matched_index]["track_id"],
-            "image": spotify_data["image"],
-            "preview_url": spotify_data["preview_url"],
-            "spotify_url": spotify_data["spotify_url"],
-        }
+        matched_song = self._serialize_track(self._df.iloc[matched_index], include_spotify=True)
 
         similarity_scores = cosine_similarity(
             self._matrix[matched_index],
@@ -152,26 +142,77 @@ class RecommendationService:
 
         results = []
         for i in song_indices:
-            title = self._df.iloc[i]["track_name"]
-            artist = self._df.iloc[i]["artists"]
-            spotify_data = self._enrich_with_spotify(title, artist)
-            results.append(
-                {
-                    "title": title,
-                    "artist": artist,
-                    "album": self._df.iloc[i]["album_name"],
-                    "popularity": int(self._df.iloc[i]["popularity"]),
-                    "duration_ms": int(self._df.iloc[i]["duration_ms"]),
-                    "track_id": self._df.iloc[i]["track_id"],
-                    "image": spotify_data["image"],
-                    "preview_url": spotify_data["preview_url"],
-                    "spotify_url": spotify_data["spotify_url"],
-                }
-            )
+            results.append(self._serialize_track(self._df.iloc[i], include_spotify=True))
 
         return {"matched_song": matched_song, "recommendations": results}
 
-    def search_songs(self, query: str | None) -> list[str]:
+    def trim_results(self, payload: dict[str, Any], limit: int) -> dict[str, Any]:
+        payload["recommendations"] = (payload.get("recommendations") or [])[:limit]
+        return payload
+
+    def recommend_by_mood(
+        self,
+        mood: str | None,
+        limit: int = 8,
+    ) -> dict[str, Any]:
+        assert self._df is not None
+
+        normalized_mood = (mood or "chill").strip().lower()
+        allowed_moods = {"happy", "sad", "energetic", "chill"}
+        if normalized_mood not in allowed_moods:
+            normalized_mood = "chill"
+
+        filtered = self._df[self._df["mood"] == normalized_mood]
+        if filtered.empty:
+            filtered = self._df[self._df["mood"] == "chill"]
+            normalized_mood = "chill"
+
+        sample_size = min(limit, len(filtered))
+        selected = (
+            filtered.sort_values(by=["popularity", "energy", "valence"], ascending=False)
+            .head(max(sample_size * 3, sample_size))
+            .sample(sample_size)
+        )
+        recommendations = [
+            self._serialize_track(row, include_spotify=True)
+            for _, row in selected.iterrows()
+        ]
+
+        return {
+            "mood": normalized_mood,
+            "matched_song": None,
+            "recommendations": recommendations,
+        }
+
+    def recommend_by_artist(
+        self,
+        artist: str | None,
+        limit: int = 8,
+    ) -> dict[str, Any]:
+        assert self._df is not None
+
+        artist_query = (artist or "").strip().lower()
+        if not artist_query:
+            return {"artist": None, "matched_song": None, "recommendations": []}
+
+        filtered = self._df[self._df["artists_lower"].str.contains(artist_query, na=False)]
+        if filtered.empty:
+            return {"artist": artist, "matched_song": None, "recommendations": []}
+
+        ordered = filtered.sort_values(by=["popularity", "energy"], ascending=False)
+        selected = ordered.head(max(limit * 2, limit)).head(limit)
+        recommendations = [
+            self._serialize_track(row, include_spotify=True)
+            for _, row in selected.iterrows()
+        ]
+
+        return {
+            "artist": artist,
+            "matched_song": None,
+            "recommendations": recommendations,
+        }
+
+    def search_songs(self, query: str | None) -> list[dict[str, Any]]:
         assert self._df is not None
 
         if not query:
@@ -179,4 +220,70 @@ class RecommendationService:
 
         query = query.lower()
         matches = self._df[self._df["track_name_lower"].str.contains(query, na=False)]
-        return matches["track_name"].head(5).tolist()
+        suggestions: list[dict[str, Any]] = []
+        seen: set[tuple[str, str]] = set()
+
+        for _, row in matches.head(20).iterrows():
+            key = (str(row["track_name"]), str(row["artists"]))
+            if key in seen:
+                continue
+            seen.add(key)
+            suggestions.append(
+                {
+                    "title": str(row["track_name"]),
+                    "artist": str(row["artists"]),
+                    "track_id": str(row["track_id"]),
+                }
+            )
+            if len(suggestions) == 5:
+                break
+
+        return suggestions
+
+    def _classify_mood(self, row: pd.Series) -> str:
+        valence = float(row.get("valence", 0))
+        energy = float(row.get("energy", 0))
+        acousticness = float(row.get("acousticness", 0))
+        tempo = float(row.get("tempo", 0))
+        genre = str(row.get("track_genre", "")).lower()
+
+        if energy >= 0.72 or tempo >= 128 or genre in {"dance", "electronic", "edm"}:
+            return "energetic"
+        if valence >= 0.62 and energy >= 0.45:
+            return "happy"
+        if valence <= 0.38 and energy <= 0.5:
+            return "sad"
+        if acousticness >= 0.45 or energy <= 0.45:
+            return "chill"
+        if valence >= 0.55:
+            return "happy"
+        return "chill"
+
+    def _serialize_track(
+        self,
+        row: pd.Series,
+        *,
+        include_spotify: bool = False,
+    ) -> dict[str, Any]:
+        title = str(row["track_name"])
+        artist = str(row["artists"])
+        spotify_data = (
+            self._enrich_with_spotify(title, artist)
+            if include_spotify
+            else {"image": None, "preview_url": None, "spotify_url": None}
+        )
+        return {
+            "title": title,
+            "artist": artist,
+            "album": str(row["album_name"]),
+            "popularity": int(row["popularity"]),
+            "duration_ms": int(row["duration_ms"]),
+            "track_id": str(row["track_id"]),
+            "genre": str(row.get("track_genre", "")),
+            "energy": float(row.get("energy", 0)),
+            "valence": float(row.get("valence", 0)),
+            "mood": str(row.get("mood", "")),
+            "image": spotify_data["image"],
+            "preview_url": spotify_data["preview_url"],
+            "spotify_url": spotify_data["spotify_url"],
+        }

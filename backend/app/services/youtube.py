@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 import requests
 
 logger = logging.getLogger(__name__)
+
+_VIDEO_ID_PATTERN = re.compile(r'watch\?v=([A-Za-z0-9_-]{11})')
 
 
 class YoutubeService:
@@ -15,6 +18,8 @@ class YoutubeService:
         self._cache: dict[str, str | None] = {}
         self._api_key: str | None = None
         self._enabled = True
+        self._session = requests.Session()
+        self._session.trust_env = False
 
     def init_app(self, app: Any) -> None:
         self._api_key = app.config.get("YOUTUBE_API_KEY")
@@ -31,7 +36,7 @@ class YoutubeService:
             return self._cache[cache_key]
 
         if not self._api_key:
-            logger.warning("YOUTUBE_API_KEY not set; skipping video lookup")
+            logger.warning("YOUTUBE_API_KEY not set; unable to search YouTube API")
             self._cache[cache_key] = None
             return None
 
@@ -46,7 +51,7 @@ class YoutubeService:
         }
 
         try:
-            response = requests.get(url, params=params, timeout=15)
+            response = self._session.get(url, params=params, timeout=15)
             data = response.json()
             logger.debug(
                 "YouTube search '%s' / '%s' -> HTTP %s",
